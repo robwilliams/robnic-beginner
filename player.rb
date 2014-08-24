@@ -4,7 +4,8 @@ class Player
 
   def actions
     [
-      WarriorRescue,
+      WarriorReverse,
+      #WarriorRescue,
       WarriorRunToStairs,
       WarriorRecoupHealth,
       WarriorRetreat,
@@ -23,6 +24,10 @@ class Player
   end
 
   private
+  def session
+    @session ||= WarriorSession.new
+  end
+
   class WarriorSession
     def previous_health
       @previous_health ||= 0
@@ -59,6 +64,15 @@ class Player
     end
   end
 
+  class WarriorReverse < WarriorAction
+    def perform_actions!
+      warrior.pivot!
+    end
+
+    def run?
+      warrior.feel.wall?
+    end
+  end
   class WarriorRescue < WarriorAction
     def perform_actions!
       if warrior.feel(:backward).empty?
@@ -122,10 +136,6 @@ class Player
     def run?
       true
     end
-  end
-
-  def session
-    @session ||= WarriorSession.new
   end
 
   class AwesomeWarrior < SimpleDelegator
