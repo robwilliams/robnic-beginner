@@ -4,6 +4,7 @@ class Player
 
   def actions
     [
+      WarriorSneakyRanger,
       WarriorRanger,
       WarriorReverse,
       WarriorRescue,
@@ -19,10 +20,11 @@ class Player
   def play_turn(warrior)
     warrior = AwesomeWarrior.new(warrior, session)
 
-    actions.each do |action| 
-      action = action.new(warrior, session) 
-      return action.play_turn if action.run?
-    end
+    actions.map {|action| 
+      action.new(warrior, session) 
+    }.select(&:run?).each {|action|
+      return action.play_turn
+    }
   end
 
   private
@@ -76,12 +78,28 @@ class Player
     end
   end
 
+  class WarriorSneakyRanger < WarriorAction
+    def perform_actions!
+      warrior.shoot!(:backward)
+    end
+
+    def run?
+      warrior.being_attacked? &&
+      warrior.feel.empty? &&
+      warrior.look(:backward).any? {|space|
+        space.enemy?
+      }
+    end
+  end
+
   class WarriorRanger < WarriorAction
     def perform_actions!
       warrior.shoot!
     end
 
     def run?
+      warrior.being_attacked? &&
+      warrior.feel.empty? &&
       warrior.look.any? {|space|
         space.enemy?
       }
@@ -129,7 +147,7 @@ class Player
     end
 
     def run?
-      warrior.health >= session.previous_health && warrior.health < 20
+      !warrior.being_attacked? && warrior.health < 20
     end
   end
 
@@ -139,7 +157,7 @@ class Player
     end
 
     def run?
-      warrior.health < session.previous_health && warrior.health <= 10
+      warrior.being_attacked? && warrior.health <= 10
     end
   end
 
@@ -164,9 +182,15 @@ class Player
   end
 
   class AwesomeWarrior < SimpleDelegator
+    attr_reader :session
+
     def initialize(warrior, session)
       @session = session
       super(warrior)
+    end
+
+    def being_attacked?
+      health < session.previous_health 
     end
   end
 end
