@@ -7,12 +7,12 @@ class Player
 
   def actions
     [
+      WarriorSneakyCaptive,
       WarriorRetreat,
       WarriorSneakyRanger,
       WarriorRanger,
       WarriorReverse,
       WarriorRescue,
-      #WarriorRescueBehind,
       WarriorRunToStairs,
       WarriorRecoupHealth,
       WarriorAttack,
@@ -34,7 +34,16 @@ class Player
   def session
     @session ||= WarriorSession.new
   end
+end
 
+class WarriorSneakyCaptive < WarriorAction
+  def perform_actions!
+    warrior.pivot!
+  end
+
+  def run?
+    warrior.look(:backward).any?(&:captive?)
+  end
 end
 
 class WarriorReverse < WarriorAction
@@ -53,11 +62,8 @@ class WarriorSneakyRanger < WarriorAction
   end
 
   def run?
-    warrior.being_attacked? &&
-      warrior.feel.empty? &&
-      warrior.look(:backward).any? {|space|
-        space.enemy?
-      }
+    warrior.feel.empty? &&
+    warrior.look(:backward).any?(&:enemy?)
   end
 end
 
@@ -68,9 +74,8 @@ class WarriorRanger < WarriorAction
 
   def run?
     warrior.feel.empty? &&
-      warrior.look.any? {|space|
-      space.enemy?
-    }
+    warrior.look.any?(&:enemy?) &&
+    warrior.look.none?(&:captive?)
   end
 end
 
@@ -81,21 +86,6 @@ class WarriorRescue < WarriorAction
 
   def run?
     warrior.feel.captive?
-  end
-end
-
-class WarriorRescueBehind < WarriorAction
-  def perform_actions!
-    if warrior.feel(:backward).empty?
-      warrior.walk!(:backward)
-    elsif warrior.feel(:backward).captive? 
-      warrior.rescue!(:backward)
-      session.rescued!
-    end
-  end
-
-  def run?
-    !session.rescued?
   end
 end
 

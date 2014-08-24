@@ -3,14 +3,6 @@ class WarriorSession
     @previous_health ||= 0
   end
 
-  def rescued!
-    @rescued = true
-  end
-
-  def rescued?
-    @rescued
-  end
-
   def end_turn(warrior)
     self.previous_health = warrior.health
   end
