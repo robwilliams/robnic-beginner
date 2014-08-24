@@ -4,8 +4,10 @@ class Player
 
   def actions
     [
+      WarriorRanger,
       WarriorReverse,
-      #WarriorRescue,
+      WarriorRescue,
+      #WarriorRescueBehind,
       WarriorRunToStairs,
       WarriorRecoupHealth,
       WarriorRetreat,
@@ -73,7 +75,30 @@ class Player
       warrior.feel.wall?
     end
   end
+
+  class WarriorRanger < WarriorAction
+    def perform_actions!
+      warrior.shoot!
+    end
+
+    def run?
+      warrior.look.any? {|space|
+        space.enemy?
+      }
+    end
+  end
+
   class WarriorRescue < WarriorAction
+    def perform_actions!
+      warrior.rescue!
+    end
+
+    def run?
+      warrior.feel.captive?
+    end
+  end
+
+  class WarriorRescueBehind < WarriorAction
     def perform_actions!
       if warrior.feel(:backward).empty?
         warrior.walk!(:backward)
